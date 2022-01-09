@@ -18,8 +18,6 @@ public class Minesweeper : MonoBehaviour
     public int height = 16;
     public int mineCount = 32;
 
-    public bool debug;
-
     private int[,] state;
 
     private void OnValidate()
@@ -143,7 +141,10 @@ public class Minesweeper : MonoBehaviour
         {
             Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             Vector3Int cell = tilemap.WorldToCell(mousePosition);
-            Process(cell);
+
+            if (tilemap.GetTile(cell) != tileFlag) {
+                Process(cell);
+            }
         }
         else if (Input.GetMouseButtonDown(1))
         {
@@ -152,13 +153,8 @@ public class Minesweeper : MonoBehaviour
             Flag(cell);
         }
 
-        if (Input.GetKeyDown(KeyCode.N))
-        {
+        if (Input.GetKeyDown(KeyCode.N)) {
             NewGame();
-
-            if (debug) {
-                Debug();
-            }
         }
     }
 
@@ -170,7 +166,7 @@ public class Minesweeper : MonoBehaviour
 
         if (state[cell.x, cell.y] == MINE)
         {
-            // TODO: game over
+            // TODO: lose menu
             tilemap.SetTile(cell, tileMine);
             return;
         }
@@ -179,6 +175,10 @@ public class Minesweeper : MonoBehaviour
             FloodFill(cell);
         } else {
             tilemap.SetTile(cell, numberTiles[state[cell.x, cell.y]]);
+        }
+
+        if (HasWon()) {
+            // TODO: win menu
         }
     }
 
@@ -193,10 +193,10 @@ public class Minesweeper : MonoBehaviour
 
         if (mineCount == EMPTY)
         {
-        FloodFill(cell + Vector3Int.up);
-        FloodFill(cell + Vector3Int.down);
-        FloodFill(cell + Vector3Int.left);
-        FloodFill(cell + Vector3Int.right);
+            FloodFill(cell + Vector3Int.up);
+            FloodFill(cell + Vector3Int.down);
+            FloodFill(cell + Vector3Int.left);
+            FloodFill(cell + Vector3Int.right);
         }
     }
 
@@ -211,16 +211,22 @@ public class Minesweeper : MonoBehaviour
         }
     }
 
-    private void Debug()
+    private bool HasWon()
     {
         for (int i = 0; i < width; i++)
         {
             for (int j = 0; j < height; j++)
             {
                 Vector3Int cell = new Vector3Int(i, j, 0);
-                Process(cell);
+                TileBase tile = tilemap.GetTile(cell);
+
+                if ((tile == tileUp || tile == tileFlag) && state[i, j] != MINE) {
+                    return false;
+                }
             }
         }
+
+        return true;
     }
 
 }
