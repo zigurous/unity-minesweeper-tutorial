@@ -3,6 +3,9 @@ using UnityEngine.Tilemaps;
 
 public class Minesweeper : MonoBehaviour
 {
+    public const int MINE = -1;
+    public const int EMPTY = 0;
+
     private Tilemap tilemap;
 
     public Tile[] numberTiles;
@@ -16,7 +19,7 @@ public class Minesweeper : MonoBehaviour
 
     public bool debug;
 
-    private bool[,] mines;
+    private int[,] state;
 
     private void OnValidate()
     {
@@ -36,20 +39,21 @@ public class Minesweeper : MonoBehaviour
 
     private void NewGame()
     {
+        state = new int[width, height];
+
         GenerateMines();
         GenerateTiles();
+        PrecomputeState();
     }
 
     private void GenerateMines()
     {
-        mines = new bool[width, height];
-
         for (int i = 0; i < mineCount; i++)
         {
             int x = Random.Range(0, width);
             int y = Random.Range(0, height);
 
-            while (mines[x, y])
+            while (state[x, y] == MINE)
             {
                 x++;
 
@@ -64,7 +68,7 @@ public class Minesweeper : MonoBehaviour
                 }
             }
 
-            mines[x, y] = true;
+            state[x, y] = MINE;
         }
     }
 
@@ -76,94 +80,32 @@ public class Minesweeper : MonoBehaviour
         {
             for (int j = 0; j < height; j++)
             {
-                Vector3Int position = new Vector3Int(i, j, 0);
-                tilemap.SetTile(position, tileUp);
+                Vector3Int cell = new Vector3Int(i, j, 0);
+                tilemap.SetTile(cell, tileUp);
             }
         }
     }
 
-    private void Update()
-    {
-        if (Input.GetMouseButtonDown(0))
-        {
-            Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            Vector3Int cell = tilemap.WorldToCell(mousePosition);
-            Process(cell);
-        }
-
-        if (Input.GetKeyDown(KeyCode.N))
-        {
-            NewGame();
-
-            if (debug) {
-                Debug();
-            }
-        }
-    }
-
-    private void Debug()
+    private void PrecomputeState()
     {
         for (int i = 0; i < width; i++)
         {
             for (int j = 0; j < height; j++)
             {
+                if (state[i, j] == MINE) {
+                    continue;
+                }
+
                 Vector3Int cell = new Vector3Int(i, j, 0);
-                Process(cell);
+                int mineCount = GetMineCount(cell);
+
+                if (mineCount == 0) {
+                    state[i, j] = EMPTY;
+                } else {
+                    state[i, j] = mineCount;
+                }
             }
         }
-    }
-
-    private void Process(Vector3Int cell)
-    {
-        if (!tilemap.HasTile(cell)) {
-            return;
-        }
-
-        if (IsMine(cell))
-        {
-            // TODO: game over
-            tilemap.SetTile(cell, tileMine);
-            return;
-        }
-
-        int mineCount = GetMineCount(cell);
-
-        if (mineCount == 0) {
-            FloodFill(cell);
-        } else {
-            tilemap.SetTile(cell, numberTiles[mineCount]);
-        }
-    }
-
-    private void FloodFill(Vector3Int cell)
-    {
-        if (!IsFillable(cell)) {
-            return;
-        }
-
-        tilemap.SetTile(cell, tileDown);
-
-        FloodFill(cell + Vector3Int.up);
-        FloodFill(cell + Vector3Int.down);
-        FloodFill(cell + Vector3Int.left);
-        FloodFill(cell + Vector3Int.right);
-    }
-
-    private bool IsFillable(Vector3Int cell)
-    {
-        if (cell.x < 0 || cell.x >= width || cell.y < 0 || cell.y >= height) {
-            return false;
-        }
-
-        if (tilemap.GetTile(cell) == tileDown) {
-            return false;
-        }
-
-        if (GetMineCount(cell) != 0) {
-            return false;
-        }
-
-        return true;
     }
 
     private int GetMineCount(Vector3Int cell)
@@ -185,7 +127,7 @@ public class Minesweeper : MonoBehaviour
                     continue;
                 }
 
-                if (IsMine(new Vector3Int(x, y, 0))) {
+                if (state[x, y] == MINE) {
                     count++;
                 }
             }
@@ -194,9 +136,80 @@ public class Minesweeper : MonoBehaviour
         return count;
     }
 
-    private bool IsMine(Vector3Int cell)
+    private void Update()
     {
-        return mines[cell.x, cell.y];
+        if (Input.GetMouseButtonDown(0))
+        {
+            Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            Vector3Int cell = tilemap.WorldToCell(mousePosition);
+            Process(cell);
+        }
+
+        if (Input.GetKeyDown(KeyCode.N))
+        {
+            NewGame();
+
+            if (debug) {
+                Debug();
+            }
+        }
+    }
+
+    private void Process(Vector3Int cell)
+    {
+        if (!tilemap.HasTile(cell)) {
+            return;
+        }
+
+        if (state[cell.x, cell.y] == MINE)
+        {
+            // TODO: game over
+            tilemap.SetTile(cell, tileMine);
+            return;
+        }
+
+        if (state[cell.x, cell.y] == EMPTY) {
+            FloodFill(cell);
+        } else {
+            tilemap.SetTile(cell, numberTiles[state[cell.x, cell.y]]);
+        }
+    }
+
+    private void FloodFill(Vector3Int cell)
+    {
+        // Out of bounds
+        if (cell.x < 0 || cell.x >= width || cell.y < 0 || cell.y >= height) {
+            return;
+        }
+
+        // Cell must be empty
+        if (state[cell.x, cell.y] != EMPTY) {
+            return;
+        }
+
+        // Already filled
+        if (tilemap.GetTile(cell) == tileDown) {
+            return;
+        }
+
+        tilemap.SetTile(cell, tileDown);
+
+        FloodFill(cell + Vector3Int.up);
+        FloodFill(cell + Vector3Int.down);
+        FloodFill(cell + Vector3Int.left);
+        FloodFill(cell + Vector3Int.right);
+    }
+
+    private void Debug()
+    {
+        for (int i = 0; i < width; i++)
+        {
+            for (int j = 0; j < height; j++)
+            {
+                Vector3Int cell = new Vector3Int(i, j, 0);
+                Process(cell);
+            }
+        }
     }
 
 }
