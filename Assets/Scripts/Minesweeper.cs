@@ -12,6 +12,7 @@ public class Minesweeper : MonoBehaviour
     public Tile tileUp;
     public Tile tileDown;
     public Tile tileMine;
+    public Tile tileFlag;
 
     public int width = 16;
     public int height = 16;
@@ -144,6 +145,12 @@ public class Minesweeper : MonoBehaviour
             Vector3Int cell = tilemap.WorldToCell(mousePosition);
             Process(cell);
         }
+        else if (Input.GetMouseButtonDown(1))
+        {
+            Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            Vector3Int cell = tilemap.WorldToCell(mousePosition);
+            Flag(cell);
+        }
 
         if (Input.GetKeyDown(KeyCode.N))
         {
@@ -198,6 +205,17 @@ public class Minesweeper : MonoBehaviour
         FloodFill(cell + Vector3Int.down);
         FloodFill(cell + Vector3Int.left);
         FloodFill(cell + Vector3Int.right);
+    }
+
+    private void Flag(Vector3Int cell)
+    {
+        TileBase currentTile = tilemap.GetTile(cell);
+
+        if (currentTile == tileFlag) {
+            tilemap.SetTile(cell, tileUp);
+        } else if (currentTile == tileUp) {
+            tilemap.SetTile(cell, tileFlag);
+        }
     }
 
     private void Debug()

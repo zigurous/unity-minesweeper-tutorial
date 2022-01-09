@@ -394,6 +394,7 @@ MonoBehaviour:
   tileUp: {fileID: 11400000, guid: e1f8996dbef59b743868242fa21573e1, type: 2}
   tileDown: {fileID: 11400000, guid: 9eecf682830ba8942a53ba681a26e61d, type: 2}
   tileMine: {fileID: 11400000, guid: 87285ca73b82a924c9f845b02a5f60e7, type: 2}
+  tileFlag: {fileID: 11400000, guid: f0470daf0220b424da385240e8a7ff07, type: 2}
   width: 16
   height: 16
   mineCount: 32
