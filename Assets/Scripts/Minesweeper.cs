@@ -184,27 +184,20 @@ public class Minesweeper : MonoBehaviour
 
     private void FloodFill(Vector3Int cell)
     {
-        // Out of bounds
-        if (cell.x < 0 || cell.x >= width || cell.y < 0 || cell.y >= height) {
-            return;
-        }
+        if (cell.x < 0 || cell.x >= width || cell.y < 0 || cell.y >= height) return;
+        if (state[cell.x, cell.y] == MINE) return;
+        if (tilemap.GetTile(cell) == tileDown) return;
 
-        // Cell must be empty
-        if (state[cell.x, cell.y] != EMPTY) {
-            return;
-        }
+        int mineCount = state[cell.x, cell.y];
+        tilemap.SetTile(cell, numberTiles[mineCount]);
 
-        // Already filled
-        if (tilemap.GetTile(cell) == tileDown) {
-            return;
-        }
-
-        tilemap.SetTile(cell, tileDown);
-
+        if (mineCount == EMPTY)
+        {
         FloodFill(cell + Vector3Int.up);
         FloodFill(cell + Vector3Int.down);
         FloodFill(cell + Vector3Int.left);
         FloodFill(cell + Vector3Int.right);
+        }
     }
 
     private void Flag(Vector3Int cell)
