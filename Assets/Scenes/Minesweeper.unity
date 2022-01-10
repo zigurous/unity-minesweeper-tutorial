@@ -382,7 +382,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   numberTiles:
-  - {fileID: 11400000, guid: 9eecf682830ba8942a53ba681a26e61d, type: 2}
+  - {fileID: 11400000, guid: c68be4334171ef94581b6a563d660c24, type: 2}
   - {fileID: 11400000, guid: b1f9134787c1bfa47b412b213228a79c, type: 2}
   - {fileID: 11400000, guid: dbc884c421b0a784f88710f4e1b63505, type: 2}
   - {fileID: 11400000, guid: de8501a5416ad5d43a0547e2b20aa920, type: 2}
@@ -391,11 +391,11 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 2fab40a880b26244795881a3d87430e3, type: 2}
   - {fileID: 11400000, guid: 8d75e8072611a7744b272e4a17da807a, type: 2}
   - {fileID: 11400000, guid: 3fb474c4494d2ed4faeaa62942dfea48, type: 2}
-  tileUp: {fileID: 11400000, guid: e1f8996dbef59b743868242fa21573e1, type: 2}
-  tileDown: {fileID: 11400000, guid: 9eecf682830ba8942a53ba681a26e61d, type: 2}
+  tileDefault: {fileID: 11400000, guid: 0a492e8172308484e8cbeac3dbeb7328, type: 2}
+  tileEmpty: {fileID: 11400000, guid: c68be4334171ef94581b6a563d660c24, type: 2}
   tileMine: {fileID: 11400000, guid: 87285ca73b82a924c9f845b02a5f60e7, type: 2}
+  tileMineExploded: {fileID: 11400000, guid: 486faf9291c36a448885b59ee9921aed, type: 2}
   tileFlag: {fileID: 11400000, guid: f0470daf0220b424da385240e8a7ff07, type: 2}
   width: 16
   height: 16
   mineCount: 32
-  debug: 0

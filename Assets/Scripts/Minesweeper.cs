@@ -9,9 +9,10 @@ public class Minesweeper : MonoBehaviour
     private Tilemap tilemap;
 
     public Tile[] numberTiles;
-    public Tile tileUp;
-    public Tile tileDown;
+    public Tile tileDefault;
+    public Tile tileEmpty;
     public Tile tileMine;
+    public Tile tileMineExploded;
     public Tile tileFlag;
 
     public int width = 16;
@@ -80,7 +81,7 @@ public class Minesweeper : MonoBehaviour
             for (int j = 0; j < height; j++)
             {
                 Vector3Int cell = new Vector3Int(i, j, 0);
-                tilemap.SetTile(cell, tileUp);
+                tilemap.SetTile(cell, tileDefault);
             }
         }
     }
@@ -167,7 +168,7 @@ public class Minesweeper : MonoBehaviour
         if (state[cell.x, cell.y] == MINE)
         {
             // TODO: lose menu
-            tilemap.SetTile(cell, tileMine);
+            tilemap.SetTile(cell, tileMineExploded);
             return;
         }
 
@@ -186,7 +187,7 @@ public class Minesweeper : MonoBehaviour
     {
         if (cell.x < 0 || cell.x >= width || cell.y < 0 || cell.y >= height) return;
         if (state[cell.x, cell.y] == MINE) return;
-        if (tilemap.GetTile(cell) == tileDown) return;
+        if (tilemap.GetTile(cell) == tileEmpty) return;
 
         int mineCount = state[cell.x, cell.y];
         tilemap.SetTile(cell, numberTiles[mineCount]);
@@ -205,8 +206,8 @@ public class Minesweeper : MonoBehaviour
         TileBase currentTile = tilemap.GetTile(cell);
 
         if (currentTile == tileFlag) {
-            tilemap.SetTile(cell, tileUp);
-        } else if (currentTile == tileUp) {
+            tilemap.SetTile(cell, tileDefault);
+        } else if (currentTile == tileDefault) {
             tilemap.SetTile(cell, tileFlag);
         }
     }
@@ -220,7 +221,7 @@ public class Minesweeper : MonoBehaviour
                 Vector3Int cell = new Vector3Int(i, j, 0);
                 TileBase tile = tilemap.GetTile(cell);
 
-                if ((tile == tileUp || tile == tileFlag) && state[i, j] != MINE) {
+                if ((tile == tileDefault || tile == tileFlag) && state[i, j] != MINE) {
                     return false;
                 }
             }
