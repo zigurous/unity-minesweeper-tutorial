@@ -6,4 +6,4 @@
 - **Topics**: Algorithms, Data Structures
 - **Version**: 2020.3 (LTS)
 - [**Download**](https://github.com/zigurous/unity-minesweeper-tutorial/archive/refs/heads/main.zip)
-- [**Watch Video**](https://www.youtube.com/c/zigurous)
+- [**Watch Video**](https://youtu.be/HBrF8LJ0Hfg)
