@@ -1,6 +1,6 @@
 # Minesweeper (2D)
 
-> Minesweeper is a single-player puzzle video game. The objective of the game is to clear a rectangular board containing hidden "mines" or bombs without detonating any of them, with help from clues about the number of neighbouring mines in each field. The game originates from the 1960s, and it has been written for many computing platforms in use today.
+> Minesweeper is a single-player puzzle game that originated in the 1960s. The objective of the game is to clear a rectangular board containing hidden "mines" or bombs without detonating any of them, with help from clues about the number of neighbouring mines in each field.
 
 - **Difficulty**: Intermediate
 - **Topics**: Algorithms, Data Structures
