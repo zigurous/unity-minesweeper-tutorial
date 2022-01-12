@@ -29,7 +29,6 @@ public class Game : MonoBehaviour
 
     private void NewGame()
     {
-        Camera.main.transform.position = new Vector3(width / 2f, height / 2f, -10f);
         state = new Cell[width, height];
         gameover = false;
 
@@ -37,6 +36,7 @@ public class Game : MonoBehaviour
         GenerateMines();
         GenerateNumbers();
 
+        Camera.main.transform.position = new Vector3(width / 2f, height / 2f, -10f);
         board.Draw(state);
     }
 
@@ -146,59 +146,61 @@ public class Game : MonoBehaviour
     {
         Vector3 worldPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         Vector3Int cellPosition = board.tilemap.WorldToCell(worldPosition);
+        Cell cell = GetCell(cellPosition.x, cellPosition.y);
 
-        // Only flag if not revealed
-        if (GetCell(cellPosition.x, cellPosition.y, out Cell cell) && !cell.revealed)
-        {
-            cell.flagged = !cell.flagged;
-            state[cell.position.x, cell.position.y] = cell;
-            board.Draw(state);
+        // Cannot flag if already revealed
+        if (cell.type == Cell.Type.Invalid || cell.revealed) {
+            return;
         }
+
+        cell.flagged = !cell.flagged;
+        state[cellPosition.x, cellPosition.y] = cell;
+        board.Draw(state);
     }
 
     private void Reveal()
     {
         Vector3 worldPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         Vector3Int cellPosition = board.tilemap.WorldToCell(worldPosition);
+        Cell cell = GetCell(cellPosition.x, cellPosition.y);
 
-        // Only reveal if not already revealed and not flagged
-        if (GetCell(cellPosition.x, cellPosition.y, out Cell cell) && !cell.revealed && !cell.flagged)
+        // Cannot reveal if already revealed or while flagged
+        if (cell.type == Cell.Type.Invalid || cell.revealed || cell.flagged) {
+            return;
+        }
+
+        switch (cell.type)
         {
-            if (cell.type == Cell.Type.Mine) {
+            case Cell.Type.Mine:
                 Explode(cell);
-            } else {
-                Reveal(cell);
-            }
+                break;
 
-            board.Draw(state);
+            case Cell.Type.Empty:
+                Flood(cell);
+                CheckWinCondition();
+                break;
+
+            default:
+                cell.revealed = true;
+                state[cellPosition.x, cellPosition.y] = cell;
+                CheckWinCondition();
+                break;
         }
-    }
 
-    private void Reveal(Cell cell)
-    {
-        if (cell.type == Cell.Type.Empty) {
-            Flood(cell);
-        }
-
-        cell.revealed = true;
-        state[cell.position.x, cell.position.y] = cell;
-
-        if (HasWon()) {
-            Win();
-        }
+        board.Draw(state);
     }
 
     private void Flood(Cell cell)
     {
         // Recursive exit conditions
         if (cell.revealed) return;
-        if (cell.type == Cell.Type.Mine) return;
-        if (!IsValid(cell.position.x, cell.position.y)) return;
+        if (cell.type == Cell.Type.Mine || cell.type == Cell.Type.Invalid) return;
 
+        // Reveal the cell
         cell.revealed = true;
         state[cell.position.x, cell.position.y] = cell;
 
-        // Keep flooding if the cell is empty, stop at a number
+        // Keep flooding if the cell is empty, otherwise stop at numbers
         if (cell.type == Cell.Type.Empty)
         {
             Flood(GetCell(cell.position.x - 1, cell.position.y));
@@ -234,8 +236,21 @@ public class Game : MonoBehaviour
         }
     }
 
-    private void Win()
+    private void CheckWinCondition()
     {
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                Cell cell = state[x, y];
+
+                // All non-mine cells must be revealed to have won
+                if (cell.type != Cell.Type.Mine && !cell.revealed) {
+                    return; // no win
+                }
+            }
+        }
+
         Debug.Log("Winner!");
         gameover = true;
 
@@ -255,43 +270,12 @@ public class Game : MonoBehaviour
         }
     }
 
-    private bool HasWon()
-    {
-        for (int x = 0; x < width; x++)
-        {
-            for (int y = 0; y < height; y++)
-            {
-                Cell cell = state[x, y];
-
-                // All non-mine cells must be revealed to have won
-                if (cell.type != Cell.Type.Mine && !cell.revealed) {
-                    return false;
-                }
-            }
-        }
-
-        return true;
-    }
-
     private Cell GetCell(int x, int y)
     {
-        Cell cell;
-        GetCell(x, y, out cell);
-        return cell;
-    }
-
-    private bool GetCell(int x, int y, out Cell cell)
-    {
-        if (IsValid(x, y))
-        {
-            cell = state[x, y];
-            return true;
-        }
-        else
-        {
-            cell = new Cell();
-            cell.position = new Vector3Int(x, y, 0);
-            return false;
+        if (IsValid(x, y)) {
+            return state[x, y];
+        } else {
+            return new Cell();
         }
     }
 
