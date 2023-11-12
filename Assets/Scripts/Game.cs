@@ -46,10 +46,11 @@ public class Game : MonoBehaviour
         {
             for (int y = 0; y < height; y++)
             {
-                Cell cell = new Cell();
-                cell.position = new Vector3Int(x, y, 0);
-                cell.type = Cell.Type.Empty;
-                state[x, y] = cell;
+                state[x, y] = new Cell
+                {
+                    position = new Vector3Int(x, y, 0),
+                    type = Cell.Type.Empty
+                };
             }
         }
     }
