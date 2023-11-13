@@ -1,10 +1,9 @@
 using UnityEngine;
 
-public struct Cell
+public class Cell
 {
     public enum Type
     {
-        Invalid,
         Empty,
         Mine,
         Number,

@@ -25,16 +25,16 @@ public class Board : MonoBehaviour
         tilemap = GetComponent<Tilemap>();
     }
 
-    public void Draw(Cell[,] state)
+    public void Draw(CellGrid grid)
     {
-        int width = state.GetLength(0);
-        int height = state.GetLength(1);
+        int width = grid.Width;
+        int height = grid.Height;
 
         for (int x = 0; x < width; x++)
         {
             for (int y = 0; y < height; y++)
             {
-                Cell cell = state[x, y];
+                Cell cell = grid[x, y];
                 tilemap.SetTile(cell.position, GetTile(cell));
             }
         }
