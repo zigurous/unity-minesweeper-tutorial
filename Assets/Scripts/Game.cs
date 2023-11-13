@@ -42,16 +42,6 @@ public class Game : MonoBehaviour
         board.Draw(grid);
     }
 
-    private void Generate(Cell startingCell)
-    {
-        if (generated) return;
-
-        grid.GenerateMines(startingCell, mineCount);
-        grid.GenerateNumbers();
-
-        generated = true;
-    }
-
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.N) || Input.GetKeyDown(KeyCode.R) || Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Space))
@@ -78,8 +68,11 @@ public class Game : MonoBehaviour
     {
         if (TryGetCellAtMousePosition(out Cell cell))
         {
-            if (!generated) {
-                Generate(cell);
+            if (!generated)
+            {
+                grid.GenerateMines(cell, mineCount);
+                grid.GenerateNumbers();
+                generated = true;
             }
 
             Reveal(cell);
