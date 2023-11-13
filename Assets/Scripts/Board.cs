@@ -46,6 +46,8 @@ public class Board : MonoBehaviour
             return GetRevealedTile(cell);
         } else if (cell.flagged) {
             return tileFlag;
+        } else if (cell.chorded) {
+            return tileEmpty;
         } else {
             return tileUnknown;
         }

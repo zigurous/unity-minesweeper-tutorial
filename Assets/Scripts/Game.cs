@@ -131,45 +131,47 @@ public class Game : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.R)) {
+        if (Input.GetKeyDown(KeyCode.N) || Input.GetKeyDown(KeyCode.R) || Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Space))
+        {
             NewGame();
+            return;
         }
-        else if (!gameover)
+
+        if (!gameover)
         {
             if (Input.GetMouseButtonDown(1)) {
                 Flag();
             } else if (Input.GetMouseButtonDown(0)) {
                 Reveal();
+            } else if (Input.GetMouseButton(2)) {
+                Chord();
+            } else if (Input.GetMouseButtonUp(2)) {
+                Unchord();
             }
         }
     }
 
     private void Flag()
     {
-        Vector3 worldPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        Vector3Int cellPosition = board.tilemap.WorldToCell(worldPosition);
-        Cell cell = GetCell(cellPosition.x, cellPosition.y);
-
-        // Cannot flag if already revealed
-        if (cell.type == Cell.Type.Invalid || cell.revealed) {
-            return;
-        }
+        if (!TryGetCellAtMousePosition(out Cell cell)) return;
+        if (cell.revealed) return;
 
         cell.flagged = !cell.flagged;
-        state[cellPosition.x, cellPosition.y] = cell;
+        state[cell.position.x, cell.position.y] = cell;
         board.Draw(state);
     }
 
     private void Reveal()
     {
-        Vector3 worldPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        Vector3Int cellPosition = board.tilemap.WorldToCell(worldPosition);
-        Cell cell = GetCell(cellPosition.x, cellPosition.y);
-
-        // Cannot reveal if already revealed or while flagged
-        if (cell.type == Cell.Type.Invalid || cell.revealed || cell.flagged) {
-            return;
+        if (TryGetCellAtMousePosition(out Cell cell)) {
+            Reveal(cell);
         }
+    }
+
+    private void Reveal(Cell cell)
+    {
+        if (cell.revealed) return;
+        if (cell.flagged) return;
 
         switch (cell.type)
         {
@@ -184,7 +186,7 @@ public class Game : MonoBehaviour
 
             default:
                 cell.revealed = true;
-                state[cellPosition.x, cellPosition.y] = cell;
+                state[cell.position.x, cell.position.y] = cell;
                 CheckWinCondition();
                 break;
         }
@@ -214,6 +216,87 @@ public class Game : MonoBehaviour
             StartCoroutine(Flood(GetCell(cell.position.x, cell.position.y - 1)));
             StartCoroutine(Flood(GetCell(cell.position.x, cell.position.y + 1)));
         }
+    }
+
+    private void Chord()
+    {
+        // unchord previous cells
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                Cell cell = state[x, y];
+                cell.chorded = false;
+                state[x, y] = cell;
+            }
+        }
+
+        // chord new cells
+        if (TryGetCellAtMousePosition(out Cell chord))
+        {
+            for (int adjacentX = -1; adjacentX <= 1; adjacentX++)
+            {
+                for (int adjacentY = -1; adjacentY <= 1; adjacentY++)
+                {
+                    int x = chord.position.x + adjacentX;
+                    int y = chord.position.y + adjacentY;
+
+                    if (TryGetCell(x, y, out Cell cell))
+                    {
+                        cell.chorded = !cell.revealed && !cell.flagged;
+                        state[x, y] = cell;
+                    }
+                }
+            }
+        }
+
+        board.Draw(state);
+    }
+
+    private void Unchord()
+    {
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                Cell cell = state[x, y];
+
+                if (cell.chorded) {
+                    Unchord(cell);
+                }
+            }
+        }
+
+        board.Draw(state);
+    }
+
+    private void Unchord(Cell chord)
+    {
+        for (int adjacentX = -1; adjacentX <= 1; adjacentX++)
+        {
+            for (int adjacentY = -1; adjacentY <= 1; adjacentY++)
+            {
+                int x = chord.position.x + adjacentX;
+                int y = chord.position.y + adjacentY;
+
+                if (TryGetCell(x, y, out Cell adjacent))
+                {
+                    if (adjacent.revealed && adjacent.type == Cell.Type.Number)
+                    {
+                        if (GetAdjacentFlagAmount(adjacent) >= adjacent.number)
+                        {
+                            chord.chorded = false;
+                            state[chord.position.x, chord.position.y] = chord;
+                            Reveal(chord);
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        chord.chorded = false;
+        state[chord.position.x, chord.position.y] = chord;
     }
 
     private void Explode(Cell cell)
@@ -276,18 +359,57 @@ public class Game : MonoBehaviour
         }
     }
 
+    private bool IsValid(int x, int y)
+    {
+        return x >= 0 && x < width && y >= 0 && y < height;
+    }
+
     private Cell GetCell(int x, int y)
     {
         if (IsValid(x, y)) {
             return state[x, y];
         } else {
-            return new Cell();
+            return default;
         }
     }
 
-    private bool IsValid(int x, int y)
+    private Cell GetCellAtMousePosition()
     {
-        return x >= 0 && x < width && y >= 0 && y < height;
+        Vector3 worldPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        Vector3Int cellPosition = board.tilemap.WorldToCell(worldPosition);
+        return GetCell(cellPosition.x, cellPosition.y);
+    }
+
+    private bool TryGetCell(int x, int y, out Cell cell)
+    {
+        cell = GetCell(x, y);
+        return cell.type != Cell.Type.Invalid;
+    }
+
+    private bool TryGetCellAtMousePosition(out Cell cell)
+    {
+        cell = GetCellAtMousePosition();
+        return cell.type != Cell.Type.Invalid;
+    }
+
+    private int GetAdjacentFlagAmount(Cell cell)
+    {
+        int count = 0;
+
+        for (int adjacentX = -1; adjacentX <= 1; adjacentX++)
+        {
+            for (int adjacentY = -1; adjacentY <= 1; adjacentY++)
+            {
+                int x = cell.position.x + adjacentX;
+                int y = cell.position.y + adjacentY;
+
+                if (TryGetCell(x, y, out Cell adjacent) && !adjacent.revealed && adjacent.flagged) {
+                    count++;
+                }
+            }
+        }
+
+        return count;
     }
 
 }
