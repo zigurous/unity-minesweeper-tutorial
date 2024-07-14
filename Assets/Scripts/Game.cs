@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
+[DefaultExecutionOrder(-1)]
 public class Game : MonoBehaviour
 {
     public int width = 16;
@@ -20,7 +21,6 @@ public class Game : MonoBehaviour
     private void Awake()
     {
         Application.targetFrameRate = 60;
-
         board = GetComponentInChildren<Board>();
     }
 
@@ -221,7 +221,6 @@ public class Game : MonoBehaviour
 
     private void Explode(Cell cell)
     {
-        Debug.Log("Game Over!");
         gameover = true;
 
         // Set the mine as exploded
@@ -257,7 +256,6 @@ public class Game : MonoBehaviour
             }
         }
 
-        Debug.Log("Winner!");
         gameover = true;
 
         // Flag all the mines
